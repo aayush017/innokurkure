@@ -78,7 +78,7 @@
     {"text": "This is terrifying, I'm frozen in fear.", "label": "fear"},
     {"text": "I'm terrified for my safety.", "label": "fear"},
     {"text": "I don't feel safe at all, this is frightening.", "label": "fear"},
-    {"text": "I'm panicking, I can't escape this fear.", "label": "fear"},
+    {"text": "I'm panicking, I can't escape this fear.", "label": "fear"}
    
   ]
   [
