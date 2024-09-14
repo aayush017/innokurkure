@@ -1,94 +1,74 @@
 import React, { useState } from "react";
 import emotionalWords from "./emotionalWords";  // Import the expanded dataset
+import { stemmer } from 'stemmer';
+
+const normalize = (word) => stemmer(word.toLowerCase());
 
 const EmotionClassifier = () => {
-  const [text, setText] = useState("");
-  const [result, setResult] = useState({
-    harasser: [], 
-    victim: [], 
-    manipulation: [], 
-    defense: [], 
-    fear: [], 
-    anger: [], 
-    legal: [],
-    abuse: [],
-    combination: []
-  });
+  const [sentence, setSentence] = useState("");
 
-  // Split text into sentences and words
-  const getSentences = (text) => text.match(/[^.!?]+[.!?]?/g)?.map(s => s.trim()) || [];
-  const getWords = (text) => text.toLowerCase().split(/\s+/);
+  // Function to handle user input
+  const handleInputChange = (e) => {
+      setSentence(e.target.value);
+  };
 
-  const classifyEmotions = (text) => {
-    const detectedEmotions = {
-      harasser: [], victim: [], manipulation: [], defense: [], fear: [], anger: [], legal: [], abuse: [], combination: []
-    };
+  // Check for trigger words and analyze the context
+  const handleSubmit = () => {
+      checkForDangerContext(sentence);
+  };
 
-    const words = getWords(text);
-    const sentences = getSentences(text);
+  function checkForDangerContext(sentence) {
+      const words = sentence.split(' ').map(normalize);
+      let triggerCount = 0;
 
-    // Check individual words/phrases
-    words.forEach(word => {
-      for (let category in emotionalWords) {
-        emotionalWords[category].forEach(phrase => {
-          if (word.includes(phrase.toLowerCase())) {
-            detectedEmotions[category].push(phrase);
-          }
-        });
-      }
-    });
-
-    // Check for phrases within sentences
-    sentences.forEach((sentence, index) => {
-      for (let category in emotionalWords) {
-        emotionalWords[category].forEach(phrase => {
-          if (sentence.includes(phrase)) {
-            detectedEmotions[category].push(phrase);
-          }
-        });
-      }
-      // Combine adjacent sentences to find mixed phrases
-      if (index < sentences.length - 1) {
-        const combined = sentence + " " + sentences[index + 1];
-        for (let category in emotionalWords) {
-          emotionalWords[category].forEach(phrase => {
-            if (combined.includes(phrase)) {
-              detectedEmotions.combination.push(phrase);
-            }
+      // Trigger detection logic
+      Object.keys(emotionalWords).forEach(category => {
+          words.forEach(word => {
+              if (emotionalWords[category].has(word)) {
+                  triggerCount++;
+              }
           });
-        }
+      });
+
+      // If two or more trigger words are found, analyze the context
+      if (triggerCount > 0) {
+          alert("Are you safe?");
+      } 
+      analyzeContext(sentence);
+  }
+
+  async function analyzeContext(sentence) {
+      try {
+          const response = await fetch('http://localhost:5000/analyze', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ sentence })
+          });
+
+          const result = await response.json();
+          if (result.context === 'UNSAFE') {
+              alert('UNSAFE: The context of the sentence indicates potential danger.');
+          } else {
+              alert('SAFE: The context does not indicate immediate danger.');
+          }
+      } catch (error) {
+          console.error('Error analyzing context:', error);
       }
-    });
-
-    setResult(detectedEmotions);
-  };
-
-  const handleChange = (e) => {
-    const inputText = e.target.value;
-    setText(inputText);
-    classifyEmotions(inputText);
-  };
+  }
 
   return (
-    <div>
-      <h1>Emotion Classifier</h1>
-      <textarea 
-        value={text} 
-        onChange={handleChange} 
-        rows="5" 
-        placeholder="Type a sentence here..."
-      />
-      <h3>Detected Emotions:</h3>
-      <div><strong>Harasser:</strong> {result.harasser.join(", ") || "None"}</div>
-      <div><strong>Victim:</strong> {result.victim.join(", ") || "None"}</div>
-      <div><strong>Manipulation:</strong> {result.manipulation.join(", ") || "None"}</div>
-      <div><strong>Defense:</strong> {result.defense.join(", ") || "None"}</div>
-      <div><strong>Fear:</strong> {result.fear.join(", ") || "None"}</div>
-      <div><strong>Anger:</strong> {result.anger.join(", ") || "None"}</div>
-      <div><strong>Legal:</strong> {result.legal.join(", ") || "None"}</div>
-      <div><strong>Abuse:</strong> {result.abuse.join(", ") || "None"}</div>
-      <div><strong>Combination Detected:</strong> {result.combination.join(", ") || "None"}</div>
-    </div>
+      <div>
+          <h1>Danger Context Detection</h1>
+          <input 
+              type="text" 
+              value={sentence} 
+              onChange={handleInputChange} 
+              placeholder="Enter a sentence..." 
+          />
+          <button onClick={handleSubmit}>Analyze</button>
+      </div>
   );
 };
 
