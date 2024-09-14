@@ -36,11 +36,12 @@ def send_help_email():
         data = request.get_json()
         message = data.get('message', 'Urgent help needed. Please help me!')
 
+        # Create the Mailtrap mail object
         mail = mt.Mail(
             sender=mt.Address(email="mailtrap@demomailtrap.com", name="Mailtrap Test"),
             to=[mt.Address(email="aayush22011@iiitd.ac.in")],
             subject="Urgent help needed",
-            text="HELP KRDO PLEASE",
+            text=message,  # Use the updated message with location
             category="Integration Test",
         )
 

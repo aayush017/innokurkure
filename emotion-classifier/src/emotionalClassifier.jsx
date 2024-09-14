@@ -9,6 +9,7 @@ const EmotionClassifier = () => {
   const [isListening, setIsListening] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [timer, setTimer] = useState(5);
+  const [location, setLocation] = useState(null);
 
   // Function to handle voice input
   const handleVoiceInput = () => {
@@ -54,6 +55,7 @@ const EmotionClassifier = () => {
     if (triggerCount > 0) {
       setShowModal(true);
       setTimer(5);  // Reset the timer to 5 seconds when the modal is shown
+      getUserLocation();  // Get location when the modal is triggered
     }
     
     analyzeContext(sentence);
@@ -76,14 +78,39 @@ const EmotionClassifier = () => {
     }
   };
 
+  // Get user location using the browser's geolocation API
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocation({ latitude, longitude });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setLocation(null);
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+      setLocation(null);
+    }
+  };
+
   async function sendHelpEmail() {
+    const locationMessage = location
+      ? `User's location: Latitude ${location.latitude}, Longitude ${location.longitude}`
+      : 'Location not available.';
+
+    const emailBody = `Urgent help needed. Please help me!\n\n${locationMessage}`;
+
     try {
       const response = await fetch('http://localhost:5000/send-help-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ message: 'Urgent help needed. Please help me!' })
+        body: JSON.stringify({ message: emailBody })
       });
 
       const result = await response.json();
@@ -109,6 +136,7 @@ const EmotionClassifier = () => {
         // Same behavior as trigger > 0 (show modal and start timer)
         setShowModal(true);
         setTimer(5);  // Reset the timer to 5 seconds when UNSAFE context is detected
+        getUserLocation();  // Get location when UNSAFE context is detected
       } else {
         alert('SAFE: The context does not indicate immediate danger.');
       }
