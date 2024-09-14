@@ -7,7 +7,7 @@ const emotionalWords = {
   
     victim: new Set([
       "help", "stop", "please", "begging", "let", "touch", "scream", "away", "home", 
-      "family", "trouble", "die", "hurt", "wrong", "breathe", "police", "promise"
+      "family", "trouble", "die", "hurt", "wrong", "breathe", "police", "promise", "not safe"
     ]),
   
     manipulation: new Set([
@@ -29,7 +29,7 @@ const emotionalWords = {
   
     anger: new Set([
       "lost", "dare", "away", "touch", "disgusting", "scared", "coward", "control", 
-      "pay", "wrong", "scare", "regret", "property", "victim", "sick", "hands"
+      "pay", "wrong", "scare", "regret", "property", "victim", "sick", "hands", "angry"
     ]),
   
     legal: new Set([

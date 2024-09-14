@@ -1,0 +1,1 @@
+model = pipeline('text-classification', model="bhadresh-savani/bert-base-uncased-emotion")
