@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import emotionalWords from "./emotionalWords";  // Import the expanded dataset
 import { stemmer } from 'stemmer';
 
@@ -8,6 +8,7 @@ const EmotionClassifier = () => {
   const [sentence, setSentence] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [timer, setTimer] = useState(5);
 
   // Function to handle voice input
   const handleVoiceInput = () => {
@@ -49,12 +50,24 @@ const EmotionClassifier = () => {
       });
     });
 
-    // If two or more trigger words are found, analyze the context
+    // If two or more trigger words are found, show modal
     if (triggerCount > 0) {
       setShowModal(true);
-    } 
+      setTimer(5);  // Reset the timer to 5 seconds when the modal is shown
+    }
+    
     analyzeContext(sentence);
   };
+
+  // Timer logic
+  useEffect(() => {
+    if (showModal && timer > 0) {
+      const countdown = setTimeout(() => setTimer(timer - 1), 1000);
+      return () => clearTimeout(countdown);
+    } else if (timer === 0 && showModal) {
+      handleModalClose('no');  // Automatically choose "No" if the timer reaches 0
+    }
+  }, [timer, showModal]);
 
   const handleModalClose = (answer) => {
     setShowModal(false);
@@ -93,7 +106,9 @@ const EmotionClassifier = () => {
 
       const result = await response.json();
       if (result.context === 'UNSAFE') {
-        alert('UNSAFE: The context of the sentence indicates potential danger.');
+        // Same behavior as trigger > 0 (show modal and start timer)
+        setShowModal(true);
+        setTimer(5);  // Reset the timer to 5 seconds when UNSAFE context is detected
       } else {
         alert('SAFE: The context does not indicate immediate danger.');
       }
@@ -116,6 +131,7 @@ const EmotionClassifier = () => {
           <p>Are you safe?</p>
           <button onClick={() => handleModalClose('yes')}>Yes</button>
           <button onClick={() => handleModalClose('no')}>No</button>
+          <p>Auto selecting "No" in: {timer} seconds</p>
         </div>
       )}
     </div>
